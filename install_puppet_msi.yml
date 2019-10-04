@@ -1,0 +1,34 @@
+#====================================================================
+# Install MSI by the lazy way
+# Author: Marcel Rebello
+# mail: mprebello@gmail.com
+# ====================================================================
+---
+- hosts: all
+  vars:
+    msi_path_from: '/etc/ansible/tmp/puppet-agent-5.5.16-x64.msi' #put file path locate in ansible machine
+    msi_path_to: 'c:\temp\myfile.msi'
+    puppet_file: 'C:\ProgramData\PuppetLabs\puppet\etc\puppet.conf'
+    puppet_server: 'mypuppet.mydomain.local' #set the puppet agent host
+  gather_facts: yes
+  tasks:
+    - name: Copy MSI To Client
+      win_copy:
+        src: "{{ msi_path_from }}"
+        dest: "{{ msi_path_to }}"
+
+    - name: Install Package
+      win_package:
+        path: "{{ msi_path_to }}"
+        state: present
+
+    - name: change configuration file
+      win_lineinfile:
+        path: "{{ puppet_file }}"
+        regexp: '^server='
+        line: "server={{ puppet_server }}"
+
+    - name: Restart service puppet
+      win_service:
+        name: puppet
+        state: restarted
